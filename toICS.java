@@ -1,4 +1,3 @@
-import java.awt.event.ActionEvent;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,11 +5,9 @@ import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.TimeZone;
-
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 public class toICS 
 {
@@ -71,7 +68,7 @@ public class toICS
 		}
 		if(check == 0)
 		{
-			System.out.println("Please renter your event with the specified error(s) corrected.");
+			System.out.println("\nPlease renter your event with above the specified error(s) corrected.");
 		}
 		return check;
 	}
@@ -82,21 +79,15 @@ public class toICS
 		String error = "";
 		String sStart = userStart;
 		String sEnd = userEnd;
-		if(!checkDate(sStart))
+		if(option == 1 &&!checkDate(sStart, "Start Date or Time"))
 		{
-			error = "Invalid Start Date and Time\n";
+			error = "";
 		}
-		if(!checkDate(sEnd))
+		if(option == 0&&!checkDate(sEnd, "End Date or Time")||error.equals(""))
 		{
-			error += "Invalid End Date and Time\n";
-		}
-		
-		if(!error.equals(""))
-		{
-			System.out.println(error);
 			return "";
 		}
-		
+
 		if(compareDateTime(sStart, sEnd) > 0)
 		{
 			error += "Start Date/Time can't be greater than End Date/Time";
@@ -120,7 +111,7 @@ public class toICS
 		}
 	}
 	
-	public boolean checkDate(String date)
+	public boolean checkDate(String date,String name)
 	{
 		//checks for formatting? given start or end?
 		boolean check = true;
@@ -130,11 +121,12 @@ public class toICS
 			if(!date.equals(formateDate.format(d)))
 			{
 				check = false;
-				System.out.println("Formate Error. Please try again");
+				System.out.println("Format Error "+name+", must be either in the form MM/dd/yyyy for date or HH:mm:ss for time.");
 			}
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.out.println("Unparsable input for "+name+", must be either in the form MM/dd/yyyy for date or HH:mm:ss for time.");
 			check = false;
 		}
 		
@@ -151,7 +143,7 @@ public class toICS
 			check = dtStart.compareTo(dtEnd);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		return check;
@@ -179,14 +171,20 @@ public class toICS
 	}
 	public static void main(String[] args) 
 	{
+		PrintWriter pw;
 		String fileName, sStart,sEnd,classification,sPriority;
 		String summary;
 		int priority = 0, check = 1;
 		
 		Scanner keyboard = new Scanner(new InputStreamReader(System.in));
-		System.out.println("Please enter the name of the file you wish to write to.");
+		System.out.println("This program generates .ics files containing calender events.");
+		System.out.println("It will store the file in the directory this program resides.");
+		System.out.println("Should you chose to name the file with the same name as existing");
+		System.out.println(".ics file in that directory, this program will overwrite it");
+		System.out.println("Please enter the name of the file you wish to write to(without .ics ending).");
+		//maybe add error checking to get rid of .ics
 		fileName = keyboard.next();
-		PrintWriter pw;
+		
 		try 
 		{
 			pw = new PrintWriter(new FileWriter(fileName+".ics"));
@@ -211,14 +209,17 @@ public class toICS
 				System.out.println("Would you like to enter a priority for this event?");
 				System.out.println("If yes, please enter any number from 1-9 with 1 being the highest priority");
 				System.out.println("If no, please enter 0");
-				sPriority = keyboard.next();
+				try{priority = keyboard.nextInt();}
+				catch (InputMismatchException e) {
+				System.out.println("Entered priority value is not an integer.");
+				}
 				//user event input end
 				//create event
 				toICS event = new toICS(pw,summary,sStart,sEnd,priority,classification);
 				int check2 = event.createEvent();
 				//make sure there are no errors
 				if(check2 == 0)
-					break;
+				{/*do nothing*/}
 				else
 				{
 					//create additional event?
@@ -231,7 +232,7 @@ public class toICS
 			//pw.println("END:VCALENDER"); //only neccesary once//needed?
 			pw.close();
 		}
-		catch (IOException e) {e.printStackTrace();}
+		catch (IOException e) {System.out.println("unable to create file with name: "+fileName);}
 	}
 }
 
