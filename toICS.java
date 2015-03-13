@@ -1,7 +1,5 @@
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.lang.*;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -12,34 +10,40 @@ import java.util.TimeZone;
 public class toICS 
 {
 	PrintWriter pw;
-	String sStart, sEnd,classification;
+	String sStart, sEnd,classification, location, description;
 	String summary;
 	int priority;
 //takes user input and generates a .ics file for them to use in calender
-	public toICS(PrintWriter pw,String summary,String sStart,String sEnd,int priority,String classification) throws IOException
-	{
+	public toICS(PrintWriter pw,String summary,String sStart,String sEnd,int priority,String classification, String location, String description) throws IOException
+	{//set the variables to passed information
 		this.pw = pw;
 		this.summary = summary;
 		this.sStart = getDT(sStart,sEnd,1);
 		this.sEnd = getDT(sStart, sEnd,0);
 		this.priority = priority;
+		this.location = location;
 		this.classification = classification.toUpperCase();
+		this.description = description;
 	}
-	public int createEvent()
+	public int createEvent()//generate the event
 	{
-		int check = checkForErrors(sEnd,sStart,priority,classification);
-		if(check != 0)
+		int check = checkForErrors(this.sEnd,this.sStart,priority,classification);
+		if(check != 0)//if there are no errors in user input
 		{
+			pw.println("BEGIN:VCALENDAR");
 			pw.println("BEGIN:VEVENT");
 			pw.println("VERSION:2.0");
 			pw.println("DTSTART;TZID=/"+getTimeZone()+":"+sStart);
 			pw.println("DTEND;TZID=/"+getTimeZone()+":"+sEnd);
+			pw.println("LOCATION:" + location);
 			pw.println("SUMMARY:"+ summary);
+			pw.println("DESCRIPTION:" + description);
 			pw.println("CLASS:" + classification);
 			pw.println("PRIORITY:"+priority);
 			pw.println("END:VEVENT");
+			pw.println("END:VCALENDAR");
 		}
-		return check;
+		return check;//return a value that says if there are errors
 	}
 	public String getTimeZone()
 	{
@@ -50,7 +54,7 @@ public class toICS
 	}
 
 	public int checkForErrors(String sEnd,String sStart,int priority,String classification)
-	{
+	{//checks the user input for possible sources of errors, before it is printed to the file
 		int check = 1;
 		if (sEnd.equals("")||sStart.equals(""))
 		{
@@ -79,13 +83,15 @@ public class toICS
 		String error = "";
 		String sStart = userStart;
 		String sEnd = userEnd;
-		if(option == 1 &&!checkDate(sStart, "Start Date or Time"))
+		 if(option == 1 &&!checkDate(sStart, "Start Date or Time"))
 		{
-			error = "";
+		    error = "";
+		    return "";
 		}
-		if(option == 0&&!checkDate(sEnd, "End Date or Time")||error.equals(""))
+		if(option == 0&&!checkDate(sEnd, "End Date or Time"))
 		{
-			return "";
+		    error = "";
+		    return "";
 		}
 
 		if(compareDateTime(sStart, sEnd) > 0)
@@ -93,7 +99,7 @@ public class toICS
 			error += "Start Date/Time can't be greater than End Date/Time";
 		}
 		
-		if(!error.equals(""))
+		if(!error.equals("")&& option == 0)
 		{
 			System.out.println(error);
 			return "";
@@ -172,40 +178,54 @@ public class toICS
 	public static void main(String[] args) 
 	{
 		PrintWriter pw;
-		String fileName, sStart,sEnd,classification,sPriority;
+		String fileName = "";
+		String sStart,sEnd,classification,sPriority, location,description;
 		String summary;
 		int priority = 0, check = 1;
 		
+		Console c = System.console();
 		Scanner keyboard = new Scanner(new InputStreamReader(System.in));
 		System.out.println("This program generates .ics files containing calender events.");
 		System.out.println("It will store the file in the directory this program resides.");
-		System.out.println("Should you chose to name the file with the same name as existing");
+		System.out.println("\nShould you chose to name the file with the same name as existing.");
 		System.out.println(".ics file in that directory, this program will overwrite it");
-		System.out.println("Please enter the name of the file you wish to write to(without .ics ending).");
+		System.out.println("\nThe name of the file will also be taken as the name of the event.");
 		//maybe add error checking to get rid of .ics
-		fileName = keyboard.next();
+		
 		
 		try 
 		{
-			pw = new PrintWriter(new FileWriter(fileName+".ics"));
-			//pw.println("BEGIN:VCALENDER"); //only neccesary once//do we need?
 			while(check == 1)
 			{
 				//user event input start
+				System.out.println("Please enter the name of the event file(without .ics ending).");
+				//fileName = keyboard.next();
+				fileName = c.readLine();
+				summary = fileName;
+				pw = new PrintWriter(new FileWriter(fileName+".ics"));
 				System.out.println("Please enter a start date in the form mm/dd/yyyy");
-				sStart = keyboard.next();
+				//sStart = keyboard.next();
+				sStart = c.readLine();
 				System.out.println("Please enter a start time in the form hh:mm:ss");
-				sStart = sStart+" "+keyboard.next();
+				//sStart = sStart+" "+keyboard.next();
+				sStart = sStart + " " + c.readLine();
+				//System.out.println(sStart);
 				System.out.println("Please enter a end date in the form mm/dd/yyyy");
-				sEnd = keyboard.next();
+				//sEnd = keyboard.next();
+				sEnd = c.readLine();
 				System.out.println("Please enter a end time in the form hh:mm:ss");
-				sEnd = sEnd +" "+keyboard.next();
+				sEnd = sEnd + " " + c.readLine();
+				//sEnd = sEnd +" "+keyboard.next();
+				System.out.println("Please enter the location");
+				//location = keyboard.next();
+				location = c.readLine();
 				System.out.println("Please enter a Summary of your event");
 				System.out.println("to indicate that you finished summarizing your event,");
 				System.out.println("please type the word \"end\" on a new line");
-				summary = writeString(keyboard);
+				description = writeString(keyboard);
 				System.out.println("Would you like this event public, private, or confidential?");
-				classification = keyboard.next();
+				//classification = keyboard.next();
+				classification = c.readLine();
 				System.out.println("Would you like to enter a priority for this event?");
 				System.out.println("If yes, please enter any number from 1-9 with 1 being the highest priority");
 				System.out.println("If no, please enter 0");
@@ -215,7 +235,7 @@ public class toICS
 				}
 				//user event input end
 				//create event
-				toICS event = new toICS(pw,summary,sStart,sEnd,priority,classification);
+				toICS event = new toICS(pw,summary,sStart,sEnd,priority,classification,location, description);
 				int check2 = event.createEvent();
 				//make sure there are no errors
 				if(check2 == 0)
@@ -227,10 +247,8 @@ public class toICS
 					System.out.println("If so enter 1, if not enter 0");
 					check = keyboard.nextInt();
 				}
+				pw.close();
 			}
-			
-			//pw.println("END:VCALENDER"); //only neccesary once//needed?
-			pw.close();
 		}
 		catch (IOException e) {System.out.println("unable to create file with name: "+fileName);}
 	}
