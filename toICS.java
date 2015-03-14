@@ -15,25 +15,20 @@ public class toICS
 	int priority;
 //takes user input and generates a .ics file for them to use in calender
 	public toICS(PrintWriter pw,String summary,String sStart,String sEnd,int priority,String classification, String location, String description) throws IOException
-	{
+	{//set the variables to passed information
 		this.pw = pw;
 		this.summary = summary;
-		//this.sStart = getDT(sStart,sEnd,1);
-		//this.sEnd = getDT(sStart, sEnd,0);
-		this.sStart = "20150508T180000"; //hard code for now
-		this.sEnd = "20150508T220000"; //hard code to check, for now.
+		this.sStart = getDT(sStart,sEnd,1);
+		this.sEnd = getDT(sStart, sEnd,0);
 		this.priority = priority;
 		this.location = location;
 		this.classification = classification.toUpperCase();
 		this.description = description;
-		
-		//System.out.println("this" + this.sStart);
-		//System.out.println(sStart);
 	}
-	public int createEvent()
+	public int createEvent()//generate the event
 	{
 		int check = checkForErrors(this.sEnd,this.sStart,priority,classification);
-		if(check != 0)
+		if(check != 0)//if there are no errors in user input
 		{
 			pw.println("BEGIN:VCALENDAR");
 			pw.println("BEGIN:VEVENT");
@@ -48,7 +43,7 @@ public class toICS
 			pw.println("END:VEVENT");
 			pw.println("END:VCALENDAR");
 		}
-		return check;
+		return check;//return a value that says if there are errors
 	}
 	public String getTimeZone()
 	{
@@ -59,7 +54,7 @@ public class toICS
 	}
 
 	public int checkForErrors(String sEnd,String sStart,int priority,String classification)
-	{
+	{//checks the user input for possible sources of errors, before it is printed to the file
 		int check = 1;
 		if (sEnd.equals("")||sStart.equals(""))
 		{
@@ -104,7 +99,7 @@ public class toICS
 			error += "Start Date/Time can't be greater than End Date/Time";
 		}
 		
-		if(!error.equals(""))
+		if(!error.equals("")&& option == 0)
 		{
 			System.out.println(error);
 			return "";
@@ -192,8 +187,9 @@ public class toICS
 		Scanner keyboard = new Scanner(new InputStreamReader(System.in));
 		System.out.println("This program generates .ics files containing calender events.");
 		System.out.println("It will store the file in the directory this program resides.");
-		System.out.println("Should you chose to name the file with the same name as existing");
+		System.out.println("\nShould you chose to name the file with the same name as existing.");
 		System.out.println(".ics file in that directory, this program will overwrite it");
+		System.out.println("\nThe name of the file will also be taken as the name of the event.");
 		//maybe add error checking to get rid of .ics
 		
 		
