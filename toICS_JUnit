@@ -1,0 +1,303 @@
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+
+public class toICS_JUnit {
+	
+	private JFrame frame;
+	private JTextField dStart;
+	private JTextField dEnd;
+	private JTextField tStart;
+	private JTextField tEnd;
+	private JTextField location;
+	private JTextField timezone;
+	private JTextArea Description;
+	private JTextField Summary;
+	private JComboBox classificationBox;
+	private JComboBox priorityBox;
+	
+	public toICS_JUnit()
+	{
+		Start();
+	}
+	
+	public static void main(String[] args) {
+		new toICS_JUnit();
+	}
+
+	private void Start()
+	{
+		frame = new JFrame();
+		frame.setBounds(100, 100, 500, 500);
+		frame.setLayout(null);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setResizable(false);
+		frame.setVisible(true);
+		
+		JLabel filename_Label = new JLabel("File Name: ");
+		filename_Label.setBounds(40, 20, 200, 23);
+		frame.add(filename_Label);
+		
+		Summary = new JTextField();
+		Summary.setBounds(190, 20, 100, 23);
+		frame.add(Summary);
+		
+		JLabel classificationBox_label = new JLabel("Classification: ");
+		classificationBox_label.setBounds(40, 60, 200, 23);
+		frame.add(classificationBox_label);
+		
+		classificationBox = new JComboBox();
+		classificationBox.setModel(new DefaultComboBoxModel(new String[]{"Public", "Private", "Confidential"}));
+		classificationBox.setBounds(190, 60, 200, 23);
+		frame.add(classificationBox);
+		
+		JLabel priority_label = new JLabel("Priority: ");
+		priority_label.setBounds(40, 100, 200, 23);
+		frame.add(priority_label);
+		
+		priorityBox = new JComboBox();
+		priorityBox.setModel(new DefaultComboBoxModel(new String[]{"0","1","2","3","4","5","6","7","8","9"}));
+		priorityBox.setBounds(190, 100, 200, 23);
+		frame.add(priorityBox);
+		
+		JLabel start_label = new JLabel("Start Date and Time: ");
+		start_label.setBounds(40, 140, 200, 23);
+		frame.add(start_label);
+		
+		JLabel end_label = new JLabel("End Date and Time: ");
+		end_label.setBounds(40, 180, 200, 23);
+		frame.add(end_label);
+		
+		dStart = new JTextField();
+		dStart.setToolTipText("mm/dd/yyyy");
+		dStart.setBounds(190, 140, 100, 23);
+		dStart.setColumns(10);
+		frame.add(dStart);
+		
+		dEnd = new JTextField();
+		dEnd.setToolTipText("mm/dd/yyyy");
+		dEnd.setBounds(190, 180, 100, 23);
+		dEnd.setColumns(10);
+		frame.add(dEnd);
+		
+		tStart = new JTextField();
+		tStart.setToolTipText("hh:mm:ss");
+		tStart.setBounds(340, 140, 100, 23);
+		frame.add(tStart);
+		
+		tEnd = new JTextField();
+		tEnd.setToolTipText("hh:mm:ss");
+		tEnd.setBounds(340, 180, 100, 23);
+		frame.add(tEnd);
+		
+		JLabel startTip = new JLabel("Ex: 03/08/2015");
+		startTip.setBounds(200, 160, 200, 23);
+		frame.add(startTip);
+		
+		JLabel endTip = new JLabel("Ex: 13:55:00");
+		endTip.setBounds(350, 160, 200, 23);
+		frame.add(endTip);
+		
+		JLabel timezone_label = new JLabel("Time Zone: ");
+		timezone_label.setBounds(40, 240, 200, 23);
+		frame.add(timezone_label);
+		
+		timezone = new JTextField(this.getTimeZone());
+		timezone.setEnabled(false);
+		timezone.setBounds(190, 240, 150, 23);
+		frame.add(timezone);
+		
+		JLabel location_label = new JLabel("Loaction: ");
+		location_label.setBounds(40, 280, 200, 23);
+		frame.add(location_label);
+		
+		location = new JTextField();
+		location.setBounds(190, 280, 300, 23);
+		frame.add(location);
+		
+		JLabel description_label = new JLabel("Description: ");
+		description_label.setBounds(40, 320, 200, 23);
+		frame.add(description_label);
+		
+		this.Description = new JTextArea();
+		Description.setBounds(190, 320, 300, 100);
+		frame.add(Description);
+		
+		JButton submit = new JButton("Sumbit");
+		submit.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				String error = "";
+				String sStart = dStart.getText()+" "+tStart.getText();
+				String sEnd = dEnd.getText()+" "+tEnd.getText();
+				
+				if(checkDate(dStart.getText(), tStart.getText()) == false)
+				{
+					error = "Invalid Start Date and Time\n";
+				}
+				if(checkDate(dEnd.getText(), tEnd.getText()) == false)
+				{
+					error += "Invalid End Date and Time\n";
+				}
+				
+				if(!error.equals(""))
+				{
+					JOptionPane.showMessageDialog(null, error);
+					return;
+				}
+				
+				if(compareDateTime(sStart, sEnd) > 0)
+				{
+					error += "Start Date/Time can't be greater than End Date/Time";
+				}
+				
+				if(!error.equals(""))
+				{
+					JOptionPane.showMessageDialog(null, error);
+					return;
+				}
+				
+				createEvent(Summary.getText(), 
+							classificationBox.getSelectedItem().toString(), 
+							convertDateTime(dStart.getText(), tStart.getText()), 
+							convertDateTime(dEnd.getText(), tEnd.getText()), 
+							priorityBox.getSelectedItem().toString(), 
+							timezone.getText(), 
+							location.getText(), 
+							getDescrption(Description.getText()));
+				
+				System.out.println(Description.getText());
+			}
+		});
+		submit.setBounds(150, 440, 200, 23);
+		frame.add(submit);
+	}
+	
+	//check user input is valid or not
+	//parameter- date[String]: include date and time of start/end
+	//return- check[boolean]: true if date is valid, false otherwise
+	public boolean checkDate(String date, String time)
+	{
+		boolean check = true;
+		String tempDT = date + " " + time;
+		SimpleDateFormat formateDate = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+		
+		try {
+			Date d = formateDate.parse(tempDT);
+			if(!tempDT.equals(formateDate.format(d)))
+			{
+				check = false;
+				System.out.println("Formate Error. Please try again");
+			}
+			
+			String[] tempDate = date.split("/");
+			if(tempDate[2].length() > 4)
+			{
+				check = false;
+			}
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("Exception Error");
+			check = false;
+		}
+		
+		return check;
+	}
+	
+	//compare the date/time for start and end
+	//parameter- start[String]: include date and time of start date/time
+	//parameter- end[String]: include date and time of end date/time
+	//return- check[int]: greater than 0 is invalid
+	public int compareDateTime(String start, String end)
+	{
+		int check = 0;
+		try {
+			Date dtStart = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").parse(start);
+			Date dtEnd = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").parse(end);
+			check =  dtStart.compareTo(dtEnd);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return check;
+	}
+
+	//convert date and time to ics file format
+	//parameter- date[String] : taken from text filed string of Start/End
+	//parameter- time[String] : taken from text filed string of Start/End
+	//return- result[String] : date and time in .ics file format
+	public String convertDateTime(String date, String time)
+	{
+		String result = "";
+		String[] tempDate = date.split("/");
+		String[] tempTime = time.split(":");
+		result = tempDate[2] + tempDate[0] + tempDate[1] + "T" + tempTime[0] + tempTime[1] + tempTime[2];
+		return result;
+	}
+	
+	public String getTimeZone()
+	{
+		//gets the timezone
+		TimeZone tz = TimeZone.getDefault();
+		String ID = tz.getID();
+		return ID;
+	}
+	
+	public String getDescrption(String description)
+	{
+		String result  = "";
+		String resultA[] = description.split("\n");
+		result = resultA[0];
+		for(int i = 1; i < resultA.length; i++)
+		{
+			result += "\\n" + resultA[i];
+		}
+		return result;
+	}
+	
+	public void createEvent(String Summary, String Classification, String Start, String End, String Priority, String Timezone, String Location, String Description)
+	{
+		try {
+			PrintWriter pw = new PrintWriter(new FileWriter(Summary +".ics"));
+			System.out.println("Im here and wait for orders");
+			pw.println("BEGIN:VCALENDAR");
+			pw.println("BEGIN:VEVENT");
+			pw.println("VERSION:2.0");
+			pw.println("DTSTART;TZID=/"+getTimeZone()+":"+Start);
+			pw.println("DTEND;TZID=/"+getTimeZone()+":"+End);
+			pw.println("LOCATION:" + Location);
+			pw.println("SUMMARY:"+ Summary);
+			pw.println("DESCRIPTION:" + Description);
+			pw.println("CLASS:" + Classification);
+			pw.println("PRIORITY:"+ Priority);
+			pw.println("END:VEVENT");
+			pw.println("END:VCALENDAR");
+			pw.close();
+			
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, "Event Create Unsucessfully!");
+		}
+		
+		
+	}
+}
