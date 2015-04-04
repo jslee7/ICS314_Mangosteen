@@ -1,4 +1,4 @@
-package JUnitCalTests;
+
 import java.lang.*;
 import java.io.*;
 import java.text.ParseException;
@@ -294,23 +294,23 @@ public class toICS
 			}
 			
 			fTimeArray = findFreeTime(sTimeArray,eTimeArray,fileCount);
-			PrintWriter pw = new PrintWriter("Free Time.ics");
-			pw.println("BEGIN:VCALENDAR");
+			
+			
 			System.out.println("These are the free time ranges that have been written to a file");
 			for(int i = 0; i < lastCount; i++)
 			{
-					pw.println("BEGIN:VFREEBUSY");
+				PrintWriter pw = new PrintWriter("FreeTime"+(i+1)+".ics");
+				    pw.println("BEGIN:VCALENDAR");
+					pw.println("BEGIN:VEVENT");
 					pw.println("DTSTART;TZID=/Pacific/Honolulu:"+sDate+"T"+fTimeArray[i][0]);
 					pw.println("DTEND;TZID=/Pacific/Honolulu:"+sDate+"T"+fTimeArray[i][1]);
 					System.out.println("Start: "+fTimeArray[i][0] + " End: " +fTimeArray[i][1]);
 					pw.println("SUMMARY:Free Time");
-					pw.println("END:VFREEBUSY");
+					pw.println("END:VEVENT");
+					pw.println("END:VCALENDAR");
+
+				pw.close();
 			}
-			pw.println("END:VCALENDAR");
-			
-			pw.close();
-			//toICS free = new toICS(new PrintWriter("Free Time.ics"), "Free Time", freeStart, freeEnd, 0, "N/A", "Free Time");
-			//free.createEvent();
 			
 			System.out.println("The date for all the events on the list is " + sDate);
 		}
