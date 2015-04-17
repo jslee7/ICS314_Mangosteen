@@ -1,3 +1,5 @@
+package JUnitCalTests;
+
 import static org.junit.Assert.assertEquals;
 
 //import org.junit.Test;
@@ -73,12 +75,26 @@ public class TestFailure extends TestCase
 		//for this to work
 		String[][] array = {{"000000","060000"},{"070000","090807"},{"100807","240000"}};
 		System.out.println(array[2][1]);
-		String[][] array2 = test.checkFreeTime("stuff.txt");
+		String[][] array2 = test.checkFreeTime("stuff.txt",true);
 		assertEquals(array[0][0],array2[0][0]);
 		assertEquals(array[0][1],array2[0][1]);
 		assertEquals(array[1][0],array2[1][0]);
 		assertEquals(array[1][1],array2[1][1]);
 		assertEquals(array[2][0],array2[2][0]);
 		assertEquals(array[2][1],array2[2][1]);
+	}
+	public void test_findMeetingTime()
+	{
+		String[][] testArray = null;
+		
+		//check for times with no overlap
+		testArray = toICS.findMeetingTime("000000", "070000", "060000","120000", 0, 70000, 60000, 120000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],null);
+		
+		//check for times with 1 hr overlap
+		testArray = toICS.findMeetingTime("000000", "060000", "070000","120000", 0, 60000, 70000, 120000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],"060000");
+		assertEquals(testArray[0][1],"070000");
+		
 	}
 }

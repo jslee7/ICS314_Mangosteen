@@ -1,4 +1,3 @@
-
 import java.lang.*;
 import java.io.*;
 import java.text.ParseException;
@@ -14,6 +13,7 @@ public class toICS
 	String summary;
 	public static int lastCount = 0;
 	int priority;
+	 static String sDatefree; //this is for freetime
 //takes user input and generates a .ics file for them to use in calender
 	public toICS(PrintWriter pw,String summary,String sStart,String sEnd,int priority,String classification, String location, String description) throws IOException
 	{//set the variables to passed information
@@ -204,7 +204,7 @@ public class toICS
 		return fTimeArray;
 	}
 
-	public static String[][] checkFreeTime(String list)
+	public static String[][] checkFreeTime(String list,boolean meetingTime)
 	{
 		String currDir;
 		String currEvent;
@@ -221,6 +221,7 @@ public class toICS
 		ValueComparator vc = new ValueComparator(map);
 		TreeMap<String, String> sorted_map = new TreeMap<String, String>();
 		String[][] fTimeArray = null;
+		
 		
 		currDir = System.getProperty("user.dir");
 		list = currDir + "/" + list;
@@ -295,24 +296,25 @@ public class toICS
 			
 			fTimeArray = findFreeTime(sTimeArray,eTimeArray,fileCount);
 			
-			
-			System.out.println("These are the free time ranges that have been written to a file");
-			for(int i = 0; i < lastCount; i++)
+			sDatefree = sDate;//the bad code
+			if(!meetingTime)
 			{
-				PrintWriter pw = new PrintWriter("FreeTime"+(i+1)+".ics");
-				    pw.println("BEGIN:VCALENDAR");
-					pw.println("BEGIN:VEVENT");
-					pw.println("DTSTART;TZID=/Pacific/Honolulu:"+sDate+"T"+fTimeArray[i][0]);
-					pw.println("DTEND;TZID=/Pacific/Honolulu:"+sDate+"T"+fTimeArray[i][1]);
-					System.out.println("Start: "+fTimeArray[i][0] + " End: " +fTimeArray[i][1]);
-					pw.println("SUMMARY:Free Time");
-					pw.println("END:VEVENT");
-					pw.println("END:VCALENDAR");
-
-				pw.close();
+				System.out.println("These are the free time ranges that have been written to a file");
+				for(int i = 0; i < fTimeArray.length; i++)
+				{
+					PrintWriter pw = new PrintWriter("FreeTime"+(i+1)+".ics");
+						pw.println("BEGIN:VCALENDAR");
+						pw.println("BEGIN:VEVENT");
+						pw.println("DTSTART;TZID=/Pacific/Honolulu:"+sDate+"T"+fTimeArray[i][0]);
+						pw.println("DTEND;TZID=/Pacific/Honolulu:"+sDate+"T"+fTimeArray[i][1]);
+						System.out.println("Start: "+fTimeArray[i][0] + " End: " +fTimeArray[i][1]);
+						pw.println("SUMMARY:Free Time");
+						pw.println("END:VEVENT");
+						pw.println("END:VCALENDAR");
+					pw.close();
+				}
+				System.out.println("The date for all the events on the list is " + sDate);
 			}
-			
-			System.out.println("The date for all the events on the list is " + sDate);
 		}
 		catch(Exception e)
 		{/*do nothing*/	 e.printStackTrace();}
@@ -330,6 +332,127 @@ public class toICS
 		array = array.trim();
 		return array;
 	}
+	
+	public static String[][] findMeetingTime(String sStart1, String sStart2, String sEnd1, String sEnd2, int start1, int start2, int end1, int end2,int length1, int length2, int count,boolean test)
+	{
+		String[][] commonFreeTime = null;
+		
+		if(test)
+		{commonFreeTime = new String[length1+length2+1][2];}
+		else
+		{commonFreeTime = new String[1][1];}
+		
+		if(start1 >= start2)
+				{
+					if(start1 < end2)//otherwise no overlap
+					{
+						if(end1 > end2)//event 1 starts later and ends later than event 2, but starts before the other event ends
+						{
+							if(!test)
+							{
+								writeCommomFreeTime(sStart1,sEnd2,count);
+							}
+							else
+							{
+								commonFreeTime[count][0]= sStart1;
+								commonFreeTime[count][1] = sEnd2;
+							}
+							count++;
+						}
+						else if(end1 <= end2)//event 1 starts later or at the same time and ends earlier or at same time as end 2, event 1 is sandwhich by event 2
+						{
+							if(!test)
+							{
+								writeCommomFreeTime(sStart1,sEnd1,count);
+							}
+							else
+							{
+								commonFreeTime[count][0]= sStart1;
+								commonFreeTime[count][1] = sEnd1;
+							}
+							count++;
+						}
+					}
+				}
+				else if(start1 < start2)
+				{
+					if(end1 > start2)
+					{
+						if(end2 > end1)
+						{
+							if(!test)
+							{
+								writeCommomFreeTime(sStart2,sEnd1,count);
+							}
+							else
+							{
+								commonFreeTime[count][0]= sStart2;
+								commonFreeTime[count][1] = sEnd1;
+							}
+							count++;
+						}
+						else if(end2 <= end1)
+						{
+							if(!test)
+							{
+								writeCommomFreeTime(sStart2,sEnd2,count);
+							}
+							else
+							{
+								commonFreeTime[count][0]= sStart2;
+								commonFreeTime[count][1] = sEnd2;
+							}
+							count++;
+						}
+					}
+				}
+				if(!test)
+				{commonFreeTime[0][0] = Integer.toString(count);}
+				
+				return commonFreeTime;
+	}
+	private static void compareTwoListFreeTime(String[][] list1, String[][] list2)
+	{
+		int count = 0;
+		for(int i = 0; i < list1.length; i++)
+		{
+			for(int j = 0; j < list2.length; j++)
+			{
+				int start1 = Integer.parseInt(list1[i][0]);
+				int start2 = Integer.parseInt(list2[j][0]);//changed from list1 to list2
+				int end1 = Integer.parseInt(list1[i][1]);
+				int end2 = Integer.parseInt(list2[j][1]);//changed from list1 to list2
+				
+				String sStart1 = list1[i][0];
+				String sStart2 = list2[j][0];//changed from list1 to list2
+				String sEnd1 = list1[i][1];
+				String sEnd2 = list2[j][1];
+				
+				String[][] countString = findMeetingTime(sStart1,sStart2,sEnd1,sEnd2,start1,start2,end1,end2,list1.length,list2.length,count,false);
+				count = Integer.parseInt(countString[0][0]);
+				
+			}
+		}
+	}
+	
+	private static void writeCommomFreeTime(String start, String end, int count)
+	{
+		PrintWriter pw;
+		try {
+			pw = new PrintWriter("CommonFreeTime"+(count+1)+".ics");
+		    pw.println("BEGIN:VCALENDAR");
+			pw.println("BEGIN:VEVENT");
+			pw.println("DTSTART;TZID=/Pacific/Honolulu:"+sDatefree+"T"+ start);
+			pw.println("DTEND;TZID=/Pacific/Honolulu:"+sDatefree+"T"+end);
+			System.out.println("Start: "+start + " End: " +end);
+			pw.println("SUMMARY:POSSIBLE MEETING TIME");
+			pw.println("END:VEVENT");
+			pw.println("END:VCALENDAR");
+			pw.close();
+		} catch (FileNotFoundException e) {
+
+		}
+	}
 	public static void main(String[] args) 
 	{
 		PrintWriter pw;
@@ -337,6 +460,7 @@ public class toICS
 		String sStart,sEnd,classification,sPriority, location,description;
 		String summary;
 		String listName;
+		String listName2;
 		String freeTime;
 		toICS event = null;
 		int checkFree;
@@ -354,9 +478,40 @@ public class toICS
 		
 		try 
 		{
+			//check for free time
+			System.out.println("Would you like to check for free time between a list of events? Type 1 for Yes, 0 for No.");
+			checkFree = keyboard.nextInt();
+			if(checkFree == 1)
+			{
+				System.out.println("Please enter the list file name. List file must be within the current directory. ");
+				System.out.println("For an exmaple: stuff.txt");
+				listName = c.readLine();
+				String[][] fTimeArray = checkFreeTime(listName,false);
+			}
+			
+			System.out.println("Would you like to check for common free time between two lists of events? Type 1 for Yes, 0 for No.");
+			checkFree = keyboard.nextInt();
+			if(checkFree == 1)
+			{
+				System.out.println("Please enter the first list file name. List file must be within the current directory. ");
+				listName = c.readLine();
+				System.out.println("Please enter the second list file name. List file must be within the current directory. ");
+				listName2 = c.readLine();
+				String[][] fTimeArray = checkFreeTime(listName,true);
+				String[][] fTimeArray2 = checkFreeTime(listName2,true);//used to be listName instead of listName2
+				compareTwoListFreeTime(fTimeArray,fTimeArray2);
+				
+			}
+			
 			while(check == 1)
 			{
 				//user event input start
+				System.out.println("Would you like to create an event file, Type 1 for Yes, 0 for No.");
+				check = keyboard.nextInt();
+				
+				if(check == 0)
+				{break;}
+				
 				System.out.println("Please enter the name of the event file(without .ics ending).");
 				//fileName = keyboard.next();
 				fileName = c.readLine();
@@ -408,15 +563,7 @@ public class toICS
 				}
 				pw.close(); 
 			}
-			//check for free time
-			System.out.println("Would you like to check for free time between a list of events? Type 1 for Yes, 0 for No.");
-			checkFree = keyboard.nextInt();
-			if(checkFree == 1)
-			{
-				System.out.println("Please enter the list file name. List file must be within the current directory. ");
-				listName = c.readLine();
-				String[][] fTimeArray = checkFreeTime(listName);
-			}
+
 		}
 		catch (IOException e) {System.out.println("unable to create file with name: "+fileName);}
 		
