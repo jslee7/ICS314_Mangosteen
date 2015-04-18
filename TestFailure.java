@@ -1,5 +1,3 @@
-package JUnitCalTests;
-
 import static org.junit.Assert.assertEquals;
 
 //import org.junit.Test;
@@ -87,14 +85,45 @@ public class TestFailure extends TestCase
 	{
 		String[][] testArray = null;
 		
-		//check for times with no overlap
+		//check for times with no overlap, greater than case
 		testArray = toICS.findMeetingTime("000000", "070000", "060000","120000", 0, 70000, 60000, 120000, 1, 1, 0, true);
 		assertEquals(testArray[0][0],null);
 		
-		//check for times with 1 hr overlap
+		//check for times with no overlap,equal to case
+		testArray = toICS.findMeetingTime("000000", "060000", "060000","120000", 0, 70000, 60000, 120000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],null);
+		
+		
+		//check for times with 1 hr overlap before
 		testArray = toICS.findMeetingTime("000000", "060000", "070000","120000", 0, 60000, 70000, 120000, 1, 1, 0, true);
 		assertEquals(testArray[0][0],"060000");
 		assertEquals(testArray[0][1],"070000");
+		
+		//checking if results are the same with a diff ordering
+		testArray = toICS.findMeetingTime("060000", "000000", "120000", "070000", 60000,0, 120000, 70000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],"060000");
+		assertEquals(testArray[0][1],"070000");
+		
+		//testing for a time contained within the other block of free time, equal to case
+		testArray = toICS.findMeetingTime("060000", "000000", "070000", "070000", 60000,0, 70000, 70000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],"060000");
+		assertEquals(testArray[0][1],"070000");
+		
+		//testing for a time contained within the other block of free time, less than case
+		testArray = toICS.findMeetingTime("060000", "000000", "070000", "090000", 60000,0, 70000, 90000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],"060000");
+		assertEquals(testArray[0][1],"070000");
+		
+		//testing for 1 hour overlap after
+		testArray = toICS.findMeetingTime("000000", "060000", "070000", "090000", 0,60000, 70000, 90000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],"060000");
+		assertEquals(testArray[0][1],"070000");
+		
+		//testing for when time is exactly the same
+		testArray = toICS.findMeetingTime("000000", "000000", "060000", "060000", 0,0, 60000, 60000, 1, 1, 0, true);
+		assertEquals(testArray[0][0],"000000");
+		assertEquals(testArray[0][1],"060000");
+		
 		
 	}
 }
