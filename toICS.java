@@ -1,20 +1,18 @@
 import java.lang.*;
 import java.io.*;
+import java.util.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
 import java.text.DateFormat;
 
 public class toICS 
 {
 	PrintWriter pw;
-	String sStart, sEnd,classification, location, description;
-	String summary;
-	public static int lastCount = 0;
+	String sStart, sEnd,classification, location, description, summary;
 	int priority;
-	 static String sDatefree; //this is for freetime
-//takes user input and generates a .ics file for them to use in calender
+	public static int lastCount = 0;
+	static String sDatefree; 
+	 
 	public toICS(PrintWriter pw,String summary,String sStart,String sEnd,int priority,String classification, String location, String description) throws IOException
 	{//set the variables to passed information
 		this.pw = pw;
@@ -52,6 +50,7 @@ public class toICS
 		}
 		return check;//return a value that says if there are errors
 	}
+	
 	public String getTimeZone()
 	{
 		//gets the timezone
@@ -83,7 +82,7 @@ public class toICS
 		}
 		return check;
 	}
-	//start Fuquan
+	
 	public String getDT(String userStart,String userEnd, int option) 
 	{
 		String error = "";
@@ -158,6 +157,7 @@ public class toICS
 		
 		return check;
 	}
+	
 	public String convertDateTime(String date, String time)
 	{
 		//returns the calender form given date and time given either end or start
@@ -167,14 +167,15 @@ public class toICS
 		result = tempDate[2] + tempDate[0] + tempDate[1] + "T" + tempTime[0] + tempTime[1] + tempTime[2];
 		return result;
 	}
-	//end Fuquan
+	
+	
 	public static String[][] findFreeTime(String[] sTimeArray,String[] eTimeArray, int fileCount)
 	{
 		String freeStart = "000000";
 		String freeEnd = "240000";
 		String[][] fTimeArray = new String[fileCount+1][2];
 		if(freeStart.compareTo(sTimeArray[0])  <= 0)
-		{			//TODO fix prblem with 000000 000000 when start is equal to 000000
+		{
 			fTimeArray[0][0] = freeStart;
 			fTimeArray[0][1] = sTimeArray[0];
 			lastCount++;
@@ -184,7 +185,6 @@ public class toICS
 		{
 			if(eTimeArray[i].compareTo(sTimeArray[i+1]) < 0)
 			{
-				//end time is not overlapping, put it in array
 				fTimeArray[i+1][0] = eTimeArray[i];
 				fTimeArray[i+1][1] = sTimeArray[i+1];
 				lastCount++;
@@ -204,27 +204,24 @@ public class toICS
 		return fTimeArray;
 	}
 
-	public static String[][] checkFreeTime(String list,boolean meetingTime)
+	public static String[][] checkFreeTime(String list, boolean meetingTime)
 	{
-		String currDir;
-		String currEvent;
-		int strSize;
-		String name;
+		String name, currDir, currEvent, currLine;
+		int strSize, fileCount = 0;
 		String sTime = "",eTime = "";
-		String currLine;
-		int fileCount = 0;
 		String sDate = null, eDate = null;
 		String freeStart = "000000", freeEnd = "240000";
+		String[][] fTimeArray = null;
+		
 		FileInputStream fstream1, fstream2;
 		BufferedReader br1, br2;
 		HashMap<String, String> map = new HashMap<String, String>();
 		ValueComparator vc = new ValueComparator(map);
 		TreeMap<String, String> sorted_map = new TreeMap<String, String>();
-		String[][] fTimeArray = null;
-		
 		
 		currDir = System.getProperty("user.dir");
 		list = currDir + "/" + list;
+		
 		try
 		{
 			fstream1 = new FileInputStream(list);
@@ -322,6 +319,7 @@ public class toICS
 		return fTimeArray;
 		
 	}
+	
 	private static String writeString(Scanner keyboard)
 	{
 		String temp, array = "";
@@ -411,6 +409,7 @@ public class toICS
 				
 				return commonFreeTime;
 	}
+	
 	private static void compareTwoListFreeTime(String[][] list1, String[][] list2)
 	{
 		int count = 0;
@@ -449,109 +448,91 @@ public class toICS
 			pw.println("END:VEVENT");
 			pw.println("END:VCALENDAR");
 			pw.close();
-		} catch (FileNotFoundException e) {
-
-		}
+		} 
+		catch (FileNotFoundException e) {/*Do Nothing*/}
 	}
+	
 	public static void main(String[] args) 
 	{
-		PrintWriter pw;
 		String fileName = "";
-		String sStart,sEnd,classification,sPriority, location,description;
-		String summary;
-		String listName;
-		String listName2;
+		String sStart, sEnd, classification, sPriority, location, description, summary;
+		String listName, listName2;
 		String freeTime;
-		toICS event = null;
-		int checkFree;
-		int priority = 0, check = 1;
+		int checkFree, priority = 0, check = 1;
 		
+		toICS event = null;
+		PrintWriter pw;
 		Console c = System.console();
 		Scanner keyboard = new Scanner(new InputStreamReader(System.in));
+		
+		//need to know information
 		System.out.println("This program generates .ics files containing calender events.");
 		System.out.println("It will store the file in the directory this program resides.");
 		System.out.println("\nShould you chose to name the file with the same name as existing.");
 		System.out.println(".ics file in that directory, this program will overwrite it");
-		System.out.println("\nThe name of the file will also be taken as the name of the event.");
-		//maybe add error checking to get rid of .ics
+		System.out.println("\nThe name of the file will also be taken as the name of the event.\n\n");
 		
 		
 		try 
 		{
-			//check for free time
-			System.out.println("Would you like to check for free time between a list of events? Type 1 for Yes, 0 for No.");
-			checkFree = keyboard.nextInt();
-			if(checkFree == 1)
-			{
-				System.out.println("Please enter the list file name. List file must be within the current directory. ");
-				System.out.println("For an exmaple: stuff.txt");
-				listName = c.readLine();
-				String[][] fTimeArray = checkFreeTime(listName,false);
-			}
+			//check if they want to create an event file
+			System.out.println("Please enter a number for the option you would like to choose.");
+			System.out.println("1: Create an event file");
+			System.out.println("2: Find free time among a list of events");
+			System.out.println("3: Find a possible meeting time between two lists of events.");
+			System.out.println("4: Exit\n");
+			check = keyboard.nextInt();
 			
-			System.out.println("Would you like to check for common free time between two lists of events? Type 1 for Yes, 0 for No.");
-			checkFree = keyboard.nextInt();
-			if(checkFree == 1)
-			{
-				System.out.println("Please enter the first list file name. List file must be within the current directory. ");
-				listName = c.readLine();
-				System.out.println("Please enter the second list file name. List file must be within the current directory. ");
-				listName2 = c.readLine();
-				String[][] fTimeArray = checkFreeTime(listName,true);
-				String[][] fTimeArray2 = checkFreeTime(listName2,true);//used to be listName instead of listName2
-				compareTwoListFreeTime(fTimeArray,fTimeArray2);
-				
-			}
-			
+		while((check > 0)&& (check < 4))
+		{
 			while(check == 1)
 			{
-				//user event input start
-				System.out.println("Would you like to create an event file, Type 1 for Yes, 0 for No.");
-				check = keyboard.nextInt();
 				
-				if(check == 0)
-				{break;}
-				
+				//INPUT START
 				System.out.println("Please enter the name of the event file(without .ics ending).");
-				//fileName = keyboard.next();
 				fileName = c.readLine();
 				summary = fileName;
 				pw = new PrintWriter(new FileWriter(fileName+".ics"));
+				
+				//date and time entry
 				System.out.println("Please enter a start date in the form mm/dd/yyyy");
-				//sStart = keyboard.next();
 				sStart = c.readLine();
+				
 				System.out.println("Please enter a start time in the form hh:mm:ss");
-				//sStart = sStart+" "+keyboard.next();
 				sStart = sStart + " " + c.readLine();
-				//System.out.println(sStart);
+				
 				System.out.println("Please enter a end date in the form mm/dd/yyyy");
-				//sEnd = keyboard.next();
 				sEnd = c.readLine();
+				
 				System.out.println("Please enter a end time in the form hh:mm:ss");
 				sEnd = sEnd + " " + c.readLine();
-				//sEnd = sEnd +" "+keyboard.next();
+				
+				//location
 				System.out.println("Please enter the location");
-				//location = keyboard.next();
 				location = c.readLine();
+				
+				//summary
 				System.out.println("Please enter a Summary of your event");
 				System.out.println("to indicate that you finished summarizing your event,");
 				System.out.println("please type the word \"end\" on a new line");
 				description = writeString(keyboard);
+				
+				//classification
 				System.out.println("Would you like this event public, private, or confidential?");
-				//classification = keyboard.next();
 				classification = c.readLine();
+				
+				//priority
 				System.out.println("Would you like to enter a priority for this event?");
 				System.out.println("If yes, please enter any number from 1-9 with 1 being the highest priority");
 				System.out.println("If no, please enter 0");
 				try{priority = keyboard.nextInt();}
-				catch (InputMismatchException e) {
-				System.out.println("Entered priority value is not an integer.");
-				}
-				//user event input end
-				//create event
+				catch (InputMismatchException e) {System.out.println("Entered priority value is not an integer.");}
+				//INPUT END
+				
+				//create event 
 				event = new toICS(pw,summary,sStart,sEnd,priority,classification,location, description);
-				int check2 = event.createEvent();
-				//make sure there are no errors
+				int check2 = event.createEvent();//make sure there are no errors
+				
 				if(check2 == 0)
 				{/*do nothing*/}
 				else
@@ -563,7 +544,35 @@ public class toICS
 				}
 				pw.close(); 
 			}
-
+			System.out.println();
+			
+			//check for free time
+			if(check == 2)
+			{
+				
+				System.out.println("Please enter the list file name. List file must be within the current directory. ");
+				System.out.println("For an example: stuff.txt");
+				listName = c.readLine();
+				String[][] fTimeArray = checkFreeTime(listName,false);
+			}
+			System.out.println();
+			
+			//check for meeting times
+			if(check == 3)
+			{
+				System.out.println("\nPlease enter the first list file name. List file must be within the current directory. ");
+				listName = c.readLine();
+				System.out.println("\nPlease enter the second list file name. List file must be within the current directory. ");
+				listName2 = c.readLine();
+				
+				String[][] fTimeArray = checkFreeTime(listName,true);
+				String[][] fTimeArray2 = checkFreeTime(listName2,true);
+				
+				compareTwoListFreeTime(fTimeArray,fTimeArray2);
+				
+			}
+			System.out.println();
+		}
 		}
 		catch (IOException e) {System.out.println("unable to create file with name: "+fileName);}
 		
