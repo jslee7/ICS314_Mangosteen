@@ -475,6 +475,9 @@ public class toICS
 		
 		try 
 		{
+			check = 0;
+		while((check >= 0)&& (check < 4))
+		{
 			//check if they want to create an event file
 			System.out.println("Please enter a number for the option you would like to choose.");
 			System.out.println("1: Create an event file");
@@ -482,9 +485,6 @@ public class toICS
 			System.out.println("3: Find a possible meeting time between two lists of events.");
 			System.out.println("4: Exit\n");
 			check = keyboard.nextInt();
-			
-		while((check > 0)&& (check < 4))
-		{
 			while(check == 1)
 			{
 				
@@ -547,18 +547,21 @@ public class toICS
 			System.out.println();
 			
 			//check for free time
-			if(check == 2)
+			while(check == 2)
 			{
 				
 				System.out.println("Please enter the list file name. List file must be within the current directory. ");
 				System.out.println("For an example: stuff.txt");
 				listName = c.readLine();
 				String[][] fTimeArray = checkFreeTime(listName,false);
+				System.out.println("Would enter another list?");
+				System.out.println("If so enter 2, if not enter 0");
+				check = keyboard.nextInt();
 			}
 			System.out.println();
 			
 			//check for meeting times
-			if(check == 3)
+			while(check == 3)
 			{
 				System.out.println("\nPlease enter the first list file name. List file must be within the current directory. ");
 				listName = c.readLine();
@@ -570,6 +573,9 @@ public class toICS
 				
 				compareTwoListFreeTime(fTimeArray,fTimeArray2);
 				
+				System.out.println("Would enter another list?");
+				System.out.println("If so enter 3, if not enter 0");
+				check = keyboard.nextInt();
 			}
 			System.out.println();
 		}
