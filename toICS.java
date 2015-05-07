@@ -206,6 +206,7 @@ public class toICS
 
 	public static String[][] checkFreeTime(String list, boolean meetingTime)
 	{
+		
 		String name, currDir, currEvent, currLine;
 		int strSize, fileCount = 0;
 		String sTime = "",eTime = "";
@@ -314,7 +315,9 @@ public class toICS
 			}
 		}
 		catch(Exception e)
-		{/*do nothing*/	 e.printStackTrace();}
+		{/*do nothing*/	/* e.printStackTrace();*/
+			System.out.println("Error. Exiting");
+		}
 		
 		return fTimeArray;
 		
@@ -475,9 +478,6 @@ public class toICS
 		
 		try 
 		{
-			check = 0;
-		while((check >= 0)&& (check < 4))
-		{
 			//check if they want to create an event file
 			System.out.println("Please enter a number for the option you would like to choose.");
 			System.out.println("1: Create an event file");
@@ -485,6 +485,9 @@ public class toICS
 			System.out.println("3: Find a possible meeting time between two lists of events.");
 			System.out.println("4: Exit\n");
 			check = keyboard.nextInt();
+			
+		while((check > 0)&& (check < 4))
+		{
 			while(check == 1)
 			{
 				
@@ -547,21 +550,25 @@ public class toICS
 			System.out.println();
 			
 			//check for free time
-			while(check == 2)
+			if(check == 2)
 			{
 				
 				System.out.println("Please enter the list file name. List file must be within the current directory. ");
 				System.out.println("For an example: stuff.txt");
 				listName = c.readLine();
-				String[][] fTimeArray = checkFreeTime(listName,false);
-				System.out.println("Would enter another list?");
-				System.out.println("If so enter 2, if not enter 0");
-				check = keyboard.nextInt();
+				try{
+					String[][] fTimeArray = checkFreeTime(listName,false);
+				}
+				catch(NullPointerException e)
+				{
+					System.out.print("There are events with the same starting and ending time(s). Please edit your list.");
+				}
+				break;
 			}
 			System.out.println();
 			
 			//check for meeting times
-			while(check == 3)
+			if(check == 3)
 			{
 				System.out.println("\nPlease enter the first list file name. List file must be within the current directory. ");
 				listName = c.readLine();
@@ -572,10 +579,8 @@ public class toICS
 				String[][] fTimeArray2 = checkFreeTime(listName2,true);
 				
 				compareTwoListFreeTime(fTimeArray,fTimeArray2);
+				break;
 				
-				System.out.println("Would enter another list?");
-				System.out.println("If so enter 3, if not enter 0");
-				check = keyboard.nextInt();
 			}
 			System.out.println();
 		}
